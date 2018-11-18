@@ -1,4 +1,4 @@
-var Cat = require('./cat_model')
+var Cat = require('../models/cat_model')
 
 module.exports = function (app) {
 
