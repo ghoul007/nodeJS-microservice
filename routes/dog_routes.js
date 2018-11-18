@@ -24,10 +24,10 @@ module.exports = function (app) {
                 res.json({ info: "error finding dogs" })
             }
 
+            // res.json({ info: 'dogs found successfly', dogs: data })
+            setTimeout(function () {
                 res.json({ info: 'dogs found successfly', dogs: data })
-            // setTimeout(function () {
-            //     res.json({ info: 'dogs found successfly', dogs: data })
-            // }, 10000)
+            }, 10000)
 
         })
     })
@@ -40,7 +40,14 @@ module.exports = function (app) {
             if (err) {
                 res.json({ info: "error finding dogs", err })
             }
-            res.json({ info: 'dogs found successfly', dog })
+            if (dog) {
+                setTimeout(function () {
+                    res.json({ info: 'dogs found successfly', dog })
+                }, 10000)
+                // res.json({ info: 'dogs found successfly', dog })
+            } else {
+                res.json({ info: 'cat nout found' })
+            }
         })
 
 

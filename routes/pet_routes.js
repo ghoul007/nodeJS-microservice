@@ -4,6 +4,9 @@ var request = require('request').defaults({
 
 
 var async = require('async')
+var redis = require('redis')
+
+var client = redis.createClient(6379, '127.0.0.1')
 
 module.exports = function (app) {
 
@@ -26,29 +29,52 @@ module.exports = function (app) {
                     })
                 },
                 dog: function (callback) {
-                    request({ uri: 'http://localhost:3001/dogs' }, function (error, response, body) {
-                        if (error) {
-                            callback({ service: 'dog', error });
-                            return;
+
+                    client.get('http://localhost:3001/dogs', function (error, dog) {
+                        if (error) { throw error }
+                        if (dog) {
+                            // res.json(JSON.parse(cat))
+                            callback(null, JSON.parse(dog))
+                        } else {
+                            request({ uri: 'http://localhost:3001/dogs' }, function (error, response, body) {
+                                if (error) {
+                                    callback({ service: 'dog', error });
+                                    return;
+                                }
+                                if (!error && response.statusCode === 200) {
+                                    callback(null, body)
+                                    client.setex('http://localhost:3001/dogs',20, JSON.stringify(body), function (error) {
+                                        if (error) {
+                                            throw error
+                                        }
+                                    })
+                                } else {
+                                    callback(response.statusCode)
+                                }
+                            })
                         }
 
-                        if (!error && response.statusCode === 200) {
-                            callback(null, body)
-                        } else {
-                            callback(response.statusCode)
-                        }
                     })
+                    // request({ uri: 'http://localhost:3001/dogs' }, function (error, response, body) {
+                    //     if (error) {
+                    //         callback({ service: 'dog', error });
+                    //         return;
+                    //     }
+
+                    //     if (!error && response.statusCode === 200) {
+                    //         callback(null, body)
+                    //     } else {
+                    //         callback(response.statusCode)
+                    //     }
+                    // })
                 }
 
 
             },
             function (error, results) {
-
-                for (var x = 0; x < 1000000; x++) {
-                    console.log(x);
-
-                }
-
+                // for (var x = 0; x < 1000000; x++) {
+                //     console.log(x);
+                // }
                 res.json({ error, results })
             }
         )
