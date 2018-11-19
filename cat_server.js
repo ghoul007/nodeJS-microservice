@@ -3,7 +3,7 @@ var app = express();
 var bodyParser = require('body-parser');
 
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/cats')
+mongoose.connect('mongodb://192.168.1.3:27017/cats')
 
 app.use(bodyParser.json())
 var catCrud = require('./routes/cat_routes')(app)

@@ -16,10 +16,11 @@ var client = redis.createClient(portRedis, urlRedis)
 module.exports = function (app) {
 
     app.get('/pets', function (req, res) {
+        res.send('1')
         async.parallel(
             {
                 cat: function (callback) {
-                    request({ uri: 'http://localhost:3000/cats' }, function (error, response, body) {
+                    request({ uri: 'http://192.168.1.3:3001/cats' }, function (error, response, body) {
                         if (error) {
                             callback({ service: 'cat', error });
                             return;
@@ -33,20 +34,20 @@ module.exports = function (app) {
                 },
                 dog: function (callback) {
 
-                    client.get('http://localhost:3001/dogs', function (error, dog) {
+                    client.get('http://192.168.1.3:3002/dogs', function (error, dog) {
                         if (error) { throw error }
                         if (dog) {
                             // res.json(JSON.parse(cat))
                             callback(null, JSON.parse(dog))
                         } else {
-                            request({ uri: 'http://localhost:3001/dogs' }, function (error, response, body) {
+                            request({ uri: 'http://192.168.1.3:3002/dogs' }, function (error, response, body) {
                                 if (error) {
                                     callback({ service: 'dog', error });
                                     return;
                                 }
                                 if (!error && response.statusCode === 200) {
                                     callback(null, body)
-                                    client.setex('http://localhost:3001/dogs', 20, JSON.stringify(body), function (error) {
+                                    client.setex('http://192.168.1.3:3002/dogs', 20, JSON.stringify(body), function (error) {
                                         if (error) {
                                             throw error
                                         }
@@ -58,36 +59,15 @@ module.exports = function (app) {
                         }
 
                     })
-                    // request({ uri: 'http://localhost:3001/dogs' }, function (error, response, body) {
-                    //     if (error) {
-                    //         callback({ service: 'dog', error });
-                    //         return;
-                    //     }
-
-                    //     if (!error && response.statusCode === 200) {
-                    //         callback(null, body)
-                    //     } else {
-                    //         callback(response.statusCode)
-                    //     }
-                    // })
                 }
 
 
             },
             function (error, results) {
-                // for (var x = 0; x < 1000000; x++) {
-                //     console.log(x);
-                // }
+                // res.send('2')
                 res.json({ error, results })
             }
         )
-        // request({ uri: 'http://localhost:3001/dogs' }, function (error, response, body) {
-        //     if (!error && response.statusCode === 200) {
-        //         res.json(body)
-        //     } else {
-        //         res.sendStatus(response.statusCode)
-        //     }
-        // })
     })
 
     app.get('/ping', function (req, res) {
@@ -121,10 +101,30 @@ module.exports = function (app) {
                 result.push(values)
             }
         ).catch((error) => {
-           res.json(error)
-        }).then(()=>{
+            res.json(error)
+        }).then(() => {
             res.json(result);
         })
     });
+
+
+    app.get('/dogs', (req, res) => {
+        request('http://192.168.1.3:3002/dogs', (error, response, body) => {
+            if (!error) {
+                res.send(body);
+            } else {
+                res.send(error);
+            }
+        })
+    })
+    app.get('/cats', (req, res) => {
+        request('http://192.168.1.3:3001/cats', (error, response, body) => {
+            if (!error) {
+                res.send(body);
+            } else {
+                res.send(error);
+            }
+        })
+    })
 
 }
